@@ -55,10 +55,9 @@ function App() {
              <Route path="inquiries" element={<InquiriesPage />} />
              <Route path="inquiries/:id" element={<InquiryDetailsPage />} />
             <Route path="support/ticket" element={<SupportTicketPage />} />
-            <Route path="inbox/whatsapp" element={<WhatsAppPage />} />
+            <Route path="inbox/whatsapp" element={<FeaturePage title="WhatsApp" breadcrumb={[{ label: 'Inbox', path: '/inbox/whatsapp' }]} badge="Omnichannel Hub" description="Centralize WhatsApp inbound messages, mentions, and lead conversations." primaryActionLabel="Go to Inquiries" primaryActionPath="/inquiries" stats={[{ label: 'New DMs', value: '12' }, { label: 'Mention alerts', value: '5' }, { label: 'Assigned today', value: '7' }]} />} />
             <Route path="inbox/instagram" element={<FeaturePage title="Instagram" breadcrumb={[{ label: 'Inbox', path: '/inbox/instagram' }]} badge="Omnichannel Hub" description="Centralize Instagram inbound messages, mentions, and lead conversations." primaryActionLabel="Go to Inquiries" primaryActionPath="/inquiries" stats={[{ label: 'New DMs', value: '12' }, { label: 'Mention alerts', value: '5' }, { label: 'Assigned today', value: '7' }]} />} />
             <Route path="inbox/facebook" element={<FeaturePage title="Facebook" breadcrumb={[{ label: 'Inbox', path: '/inbox/facebook' }]} badge="Omnichannel Hub" description="Review Facebook leads and inbox activity without leaving the CRM." primaryActionLabel="View Leads" primaryActionPath="/leads" stats={[{ label: 'Messenger leads', value: '18' }, { label: 'Unassigned', value: '4' }, { label: 'Responded today', value: '9' }]} />} />
-            <Route path="inbox/help-support" element={<FeaturePage title="Help & Support" breadcrumb={[{ label: 'Inbox', path: '/inbox/help-support' }]} badge="Omnichannel Hub" description="Support and help workflows for your omnichannel team live here." primaryActionLabel="Raise Ticket" primaryActionPath="/support/ticket" stats={[{ label: 'Open cases', value: '6' }, { label: 'Waiting customer', value: '3' }, { label: 'Resolved this week', value: '21' }]} />} />
             <Route path="users" element={<Users />} />
             <Route path="kanban" element={<KanbanBoard />} />
             <Route path="calendar" element={<Calendar />} />
@@ -75,7 +74,9 @@ function App() {
             <Route path="payments/settings" element={<PaymentSettings />} />
             <Route path="resources" element={<ResourceCenter />} />
             <Route path="app-ads" element={<AppAdsTxt />} />
-            <Route path="referral" element={<ReferralProgram />} />
+            {/* <Route path="referral" element={<ReferralProgram />} /> */}
+            <Route path="referral" element={<FeaturePage title="Referral Program" breadcrumb={[{ label: 'Referral Program', path: '/referral' }]} />} />
+
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<GeneralSettings />} />
           </Route>

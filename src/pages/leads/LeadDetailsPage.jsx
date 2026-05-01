@@ -90,17 +90,21 @@ const LeadDetailsPage = () => {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 20
+        marginBottom: 20,
+        flexWrap: "wrap",
+        gap: 12
       }}>
         <h1 style={{
           fontSize: theme.fontSizeH1,
           fontWeight: theme.fontWeightBold,
-          color: theme.textPrimary
+          color: theme.textPrimary,
+          margin: 0,
+          flex: "1 1 auto"
         }}>
           Lead Details
         </h1>
 
-        <Button variant="primary" onClick={() => navigate("/leads")}>
+        <Button variant="primary" onClick={() => navigate("/leads")} style={{ whiteSpace: "nowrap" }}>
           <ArrowLeft size={16} /> Back
         </Button>
       </div>
@@ -108,21 +112,26 @@ const LeadDetailsPage = () => {
       {/* GRID */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "2fr 1fr",
+        gridTemplateColumns: "1fr",
         gap: 20
-      }} className="grid-cols-1 md:grid-cols-[2fr_1fr]">
+      }}
+      className="grid-responsive"
+      onLoad={() => {
+        if (window.innerWidth >= 768) {
+          document.querySelector('.grid-responsive').style.gridTemplateColumns = "2fr 1fr";
+        }
+      }}>
 
         {/* LEFT */}
         <Card>
-       
-
           <div style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "1fr",
             gap: 16,
             color: theme.textPrimary,
             marginBottom: 16
-          }}>
+          }}
+          className="details-grid">
             <Detail label="Name" value={lead.name} />
             <Detail label="Email" value={lead.email} />
             <Detail label="Phone" value={lead.phone} />
@@ -193,7 +202,7 @@ const LeadDetailsPage = () => {
           <h3 style={{ fontSize: theme.fontSizeH3 }}>Follow-up Timeline</h3>
 
           <Button variant="primary" onClick={() => setFollowModal(true)}>
-            Update Lead
+            Add Follow-up
           </Button>
         </div>
 
@@ -342,6 +351,35 @@ const LeadDetailsPage = () => {
     }
   `}</style>
 </Modal>
+
+      {/* RESPONSIVE STYLES */}
+      <style>{`
+        @media (max-width: 768px) {
+          .grid-responsive {
+            grid-template-columns: 1fr !important;
+          }
+          
+          .details-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @media (min-width: 769px) {
+          .grid-responsive {
+            grid-template-columns: 2fr 1fr !important;
+          }
+          
+          .details-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          h1 {
+            font-size: 24px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

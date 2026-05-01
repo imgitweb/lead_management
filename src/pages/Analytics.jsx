@@ -167,19 +167,23 @@ const LeadFormFields = ({ values, setFormData, statusOptions, priorityOptions, s
     </div>
   );
 };
-import { DollarSign, Eye, MousePointerClick, Target, Activity, Plus } from 'lucide-react';
+import { DollarSign, Eye, MousePointerClick, Target, Activity, Plus, Ticket, CircleCheck } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import StatCard from '../components/UI/StatCard';
 import Button from '../components/UI/Button';
 import Card from '../components/UI/Card';
 import Breadcrumb from '../components/UI/Breadcrumb';
+import Badge from '../components/UI/Badge';
 import { theme } from '../theme/constants';
 import { useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const Analytics = () => {
+  const navigate = useNavigate();
    const [leads, setLeads] = useState([]);
   const [inquiries, setInquiries] = useState([]);
+  const [tickets, setTickets] = useState([]);
 
   // 🚀 FETCH DATA
   const [addModal, setAddModal] = useState(false);
@@ -210,16 +214,28 @@ const Analytics = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [leadRes, inquiryRes] = await Promise.all([
+        const [leadRes, inquiryRes, ticketRes] = await Promise.all([
           api.get('/contact'),
           api.get('/auth/universities'),
+          api.get('/support-tickets'),
         ]);
 
         const leadData = leadRes.data;
         const inquiryData = inquiryRes.data;
+        const ticketData = ticketRes.data;
 
         setLeads(leadData?.contacts || []);
         setInquiries(inquiryData?.universities || []);
+        setTickets((ticketData?.tickets || []).map((ticket) => ({
+          ...ticket,
+          _id: ticket._id || ticket.id,
+          subject: ticket.subject || '',
+          category: ticket.category || 'General',
+          priority: ticket.priority || 'Medium',
+          status: ticket.status || 'Open',
+          assignedTo: ticket.assignedTo || '',
+          createdBy: ticket.createdBy || '',
+        })));
       } catch (err) {
         console.error(err);
       }
@@ -248,8 +264,11 @@ const stats = useMemo(() => {
     highPriority: leads.filter(l => l.priority === "High").length,
     contacted: leads.filter(l => l.status === "Contacted").length,
     newInquiries: inquiries.filter(i => i.status === "New").length,
+    totalTickets: tickets.length,
+    openTickets: tickets.filter((ticket) => ticket.status === 'Open').length,
+    resolvedTickets: tickets.filter((ticket) => ticket.status === 'Resolved').length,
   };
-}, [leads, inquiries]);
+}, [leads, inquiries, tickets]);
 
   const [chartPeriod, setChartPeriod] = useState('daily');
 
@@ -275,18 +294,26 @@ const chartData = useMemo(() => {
 
   leads.forEach((l) => {
     const key = getKey(l.createdAt);
-    if (!map[key]) map[key] = { name: key, leads: 0, inquiries: 0 };
+    if (!map[key]) map[key] = { name: key, leads: 0, inquiries: 0, tickets: 0 };
     map[key].leads += 1;
   });
 
   inquiries.forEach((i) => {
     const key = getKey(i.createdAt);
-    if (!map[key]) map[key] = { name: key, leads: 0, inquiries: 0 };
+    if (!map[key]) map[key] = { name: key, leads: 0, inquiries: 0, tickets: 0 };
     map[key].inquiries += 1;
   });
 
+  tickets.forEach((ticket) => {
+    const key = getKey(ticket.createdAt);
+    if (!map[key]) map[key] = { name: key, leads: 0, inquiries: 0, tickets: 0 };
+    map[key].tickets += 1;
+  });
+
   return Object.values(map);
-}, [leads, inquiries, chartPeriod]);
+}, [leads, inquiries, tickets, chartPeriod]);
+
+  const recentTickets = useMemo(() => tickets.slice(0, 5), [tickets]);
 
 
 
@@ -309,13 +336,13 @@ const chartData = useMemo(() => {
 
 
       {/* Responsive Stat Cards Grid: Tailwind version, 2 per row on md+, 1 per row on mobile */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
         <StatCard icon={Eye} title="Total Leads" value={stats.totalLeads} iconBg={theme.statIcons.impressions} path="/leads" trend="+12%" trendUp={true} />
         <StatCard icon={DollarSign} title="Total Inquiries" value={stats.totalInquiries} iconBg={theme.statIcons.revenue} path="/inquiries" />
         <StatCard icon={Target} title="Qualified Leads" value={stats.qualified} iconBg={theme.statIcons.ecpm} path="/leads" />
         <StatCard icon={Activity} title="High Priority" value={stats.highPriority} iconBg={theme.statIcons.fillRate} path="/high-priority" />
         <StatCard icon={MousePointerClick} title="Contacted Leads" value={stats.contacted} iconBg={theme.statIcons.clicks} path="/leads" />
-        {/* <StatCard icon={Scissors} title="New Inquiries" value={stats.newInquiries} iconBg={theme.statIcons.ctr} path="/new-inquiries" /> */}
+        <StatCard icon={Ticket} title="Open Tickets" value={stats.openTickets} iconBg={theme.statIcons.ctr} path="/support/ticket" />
       </div>
 
 
@@ -385,6 +412,7 @@ const chartData = useMemo(() => {
               />
              <Area type="monotone" dataKey="leads" stroke="#4f46e5" fill="#4f46e533" />
 <Area type="monotone" dataKey="inquiries" stroke="#22c55e" fill="#22c55333" />
+              <Area type="monotone" dataKey="tickets" stroke="#f59e0b" fill="#f59e0b33" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -396,6 +424,46 @@ const chartData = useMemo(() => {
   </div>
 )}
       </Card>
+
+      {/* <Card style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Ticket style={{ width: 18, height: 18, color: theme.primary }} />
+            <span style={{ fontSize: 16, fontWeight: 600, color: theme.textPrimary }}>Recent Support Tickets</span>
+          </div>
+          <Button variant="primary" onClick={() => navigate('/support/ticket')}>View All Tickets</Button>
+        </div>
+
+        {recentTickets.length > 0 ? (
+          <div style={{ display: 'grid', gap: 12 }}>
+            {recentTickets.map((ticket) => (
+              <div key={ticket._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, padding: '14px 16px', border: `1px solid ${theme.cardBorder}`, borderRadius: theme.radiusLg, background: theme.cardBg, flexWrap: 'wrap' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: theme.textPrimary, marginBottom: 4, wordBreak: 'break-word' }}>
+                    {ticket.subject}
+                  </div>
+                  <div style={{ fontSize: 12, color: theme.textMuted }}>
+                    {ticket.category} {ticket.assignedTo ? `• ${ticket.assignedTo}` : ''}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <Badge variant={ticket.status === 'Open' ? 'info' : ticket.status === 'In Progress' ? 'warning' : ticket.status === 'Resolved' ? 'success' : 'default'}>
+                    {ticket.status}
+                  </Badge>
+                  <Badge variant={ticket.priority === 'High' ? 'error' : ticket.priority === 'Medium' ? 'warning' : 'success'}>
+                    {ticket.priority}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: 20, color: theme.textMuted }}>
+            No support tickets yet
+          </div>
+        )}
+      </Card> */}
     </div>
   );
 };

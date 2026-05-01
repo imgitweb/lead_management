@@ -39,23 +39,22 @@ const MENU_CONFIG = [
           { name: 'WhatsApp', path: '/inbox/whatsapp', icon: MessageSquare },
           { name: 'Instagram', path: '/inbox/instagram', icon: AppWindow },
           { name: 'Facebook', path: '/inbox/facebook', icon: Globe },
-          { name: 'Help & Support', path: '/inbox/help-support', icon: Bug },
         ]
       }, // Non-clickable section header
 
     ]
   },
-  {
-    group: 'Reports',
-    items: [
-      { name: 'Custom Reports', icon: FileCode , children: [
-        { name: 'Earnings', path: '/reports', icon: DollarSign },
-        { name: 'Invoices', path: '/payments/invoices', icon: Users },
-        { name: 'Transactions', path: '/payments/transactions', icon: ArrowRightLeft },
-      ]},
+  // {
+  //   group: 'Reports',
+  //   items: [
+  //     { name: 'Custom Reports', icon: FileCode , children: [
+  //       { name: 'Earnings', path: '/reports', icon: DollarSign },
+  //       { name: 'Invoices', path: '/payments/invoices', icon: Users },
+  //       { name: 'Transactions', path: '/payments/transactions', icon: ArrowRightLeft },
+  //     ]},
 
-    ]
-  },
+  //   ]
+  // },
   {
     group: 'Refferal & Rewards',
     items:[

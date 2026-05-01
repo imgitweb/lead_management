@@ -389,7 +389,9 @@ const InquiriesPage = () => {
       header: "University",
       accessor: "university_name",
       render: (row) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div
+          onClick={() => navigate(`/inquiries/${row._id}`)}
+         style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Avatar name={row.university_name} size="sm" />
           <div>
             <div style={{ fontWeight: 600, color: theme.textPrimary }}>

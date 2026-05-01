@@ -99,7 +99,7 @@ const Topbar = ({ onHamburger }) => {
             items={[
               { icon: User, label: 'My Profile', onClick: () => navigate('/profile') },
               {icon: Users, label: 'User', onClick: () => navigate('/users')},
-              { icon: SettingsIcon, label: 'Settings', onClick: () => navigate('/settings') },
+              // { icon: SettingsIcon, label: 'Settings', onClick: () => navigate('/settings') },
               { divider: true },
               { icon: LogOut, label: 'Sign Out', danger: true, onClick: logout },
             ]}

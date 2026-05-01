@@ -313,7 +313,9 @@ const LeadsPage = () => {
       header: "Lead",
       accessor: "name",
       render: (row) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div
+            onClick={() => navigate(`/leads/${row._id}`)}
+         style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Avatar name={row.name} size="sm" />
           <div>
             <div style={{ fontWeight: 600, color: theme.textPrimary }}>
