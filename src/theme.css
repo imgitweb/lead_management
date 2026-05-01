@@ -1,0 +1,125 @@
+/* Import Tailwind CSS v4 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Oswald:wght@200..700&family=Sora:wght@100..800&display=swap');
+@import "tailwindcss";
+
+/* ============================================
+   TAILWIND v4 THEME CONFIGURATION
+   ============================================ */
+@theme {
+    --color-primary: #03D985;
+    --color-primary-hover: #02b870;
+    --color-bg-dark: #000000;
+    --color-surface: #111111;
+
+    /* Typography */
+    --font-sans: 'Inter', sans-serif;
+    --font-heading: 'Oswald', sans-serif;
+    --font-body: 'Sora', sans-serif;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+@layer base {
+    body {
+        @apply bg-[var(--color-bg-dark)] text-white font-sans antialiased;
+        font-family: 'Sora', sans-serif;
+        scroll-behavior: smooth;
+    }
+    
+
+    ::selection {
+        @apply bg-[var(--color-primary)] text-black;
+    }
+}
+
+/* ============================================
+   DASHBOARD SIDEBAR STYLES
+   ============================================ */
+
+/* --- Sidebar Container --- */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+    background: #0a0a0a;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+/* --- Bottom Left Gradient Glow (reference match) --- */
+.sidebar::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 45%;
+    background: radial-gradient(
+        ellipse at 10% 100%,
+        rgba(3, 217, 133, 0.18) 0%,
+        rgba(3, 217, 133, 0.06) 35%,
+        transparent 70%
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+@layer components {
+    /* Publisher Badge (green pill at top) */
+    .sidebar-publisher-badge {
+        @apply flex items-center justify-between px-4 py-3 rounded-lg text-white font-semibold text-sm cursor-pointer transition-all duration-200;
+        background: var(--color-primary);
+        overflow: hidden;
+        white-space: nowrap;
+    }
+    .sidebar-publisher-badge:hover {
+        background: var(--color-primary-hover);
+    }
+
+    /* User Profile Card at Bottom */
+    .sidebar-user-card {
+        @apply flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer;
+        background: rgba(3, 217, 133, 0.06);
+        border: 1px solid rgba(3, 217, 133, 0.1);
+        overflow: hidden;
+    }
+    .sidebar-user-card:hover {
+        background: rgba(3, 217, 133, 0.1);
+        border-color: rgba(3, 217, 133, 0.2);
+    }
+}
+
+/* --- Sidebar scrollbar - ultra thin & subtle --- */
+.sidebar-scroll::-webkit-scrollbar {
+    width: 3px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(3, 217, 133, 0.3);
+}
+
+/* --- Collapsible sub-menu animation --- */
+.sidebar-submenu {
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+.sidebar-submenu-closed {
+    max-height: 0;
+    opacity: 0;
+}
+.sidebar-submenu-open {
+    max-height: 300px;
+    opacity: 1;
+}
