@@ -16,6 +16,12 @@ const Topbar = ({ onHamburger }) => {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  const [now, setNow] = React.useState(new Date());
+  React.useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <header style={{
       minHeight: 60, padding: '12px clamp(12px, 2vw, 28px)',
@@ -31,7 +37,7 @@ const Topbar = ({ onHamburger }) => {
           </button>
         )}
       </div>
-      <div style={{ position: 'relative', flex: '1 1 260px', width: '100%', maxWidth: 380, minWidth: 0 }}>
+      <div style={{ position: 'relative', flex: '1 1 260px', width: '100%', maxWidth: isMobile ? '100%' : 380, minWidth: 0, display: isMobile ? (window.innerWidth < 600 ? 'none' : 'block') : 'block' }}>
         <Search style={{
           position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
           width: 16, height: 16, color: theme.inputPlaceholder, pointerEvents: 'none',
@@ -51,14 +57,14 @@ const Topbar = ({ onHamburger }) => {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
+          display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 8,
           fontSize: 13, fontWeight: 600, padding: '6px 14px', borderRadius: 20,
           border: `1px solid ${theme.inputBorder}`, background: theme.cardBg,
           whiteSpace: 'nowrap',
         }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: theme.primary }} />
-          <span style={{ color: theme.textMuted }}>Revenue:</span>
-          <span style={{ color: theme.textPrimary }}>$12,840.60</span>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
+          <span style={{ color: theme.textMuted, marginRight: 6 }}>Running</span>
+          <span style={{ color: theme.textPrimary }}>{now.toLocaleTimeString()}</span>
         </div>
 
         <button style={{
@@ -77,9 +83,9 @@ const Topbar = ({ onHamburger }) => {
         <div style={{ height: 32, width: 1, background: theme.topbarBorder, margin: '0 4px' }} />
         
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ textAlign: 'right', display: 'none' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: theme.textPrimary, lineHeight: 1.2 }}>{user?.name || 'Guest User'}</div>
-            <div style={{ fontSize: 11, color: theme.textMuted }}>{user?.role || 'User'}</div>
+          <div style={{ textAlign: 'right', display: window.innerWidth > 768 ? 'block' : 'none' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: theme.textPrimary, lineHeight: 1.2 }}>{user?.name || 'User'}</div>
+            <div style={{ fontSize: 11, color: theme.textMuted }}>{user?.role || 'Member'}</div>
           </div>
           
           <DropdownMenu

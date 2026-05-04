@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import {
   BarChart2, FileText, AppWindow, Bug, Wallet,
   ChevronRight, ChevronDown, Download, FileCode, Gift, Globe,
@@ -161,6 +162,7 @@ const getNavStyle = (isActive, collapsed) => ({
 const Sidebar = ({ collapsed, onToggle, mobileOpen, setMobileOpen }) => {
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const location = useLocation();
+  const { user } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
   const w = collapsed ? COLLAPSED_W : EXPANDED_W;
 
@@ -483,7 +485,7 @@ const Sidebar = ({ collapsed, onToggle, mobileOpen, setMobileOpen }) => {
             <HoverPopup
               collapsed={collapsed}
               content={
-                <NavLink to="/profile" style={{ padding: '4px 12px', fontSize: 13, fontWeight: 500, color: '#fff', whiteSpace: 'nowrap', textDecoration: 'none', display: 'block' }}>Ankit Jatav</NavLink>
+                <NavLink to="/profile" style={{ padding: '4px 12px', fontSize: 13, fontWeight: 500, color: '#fff', whiteSpace: 'nowrap', textDecoration: 'none', display: 'block' }}>{user?.name || 'User'}</NavLink>
               }
             >
               <NavLink to="/profile" style={{ display: 'flex', justifyContent: 'center', padding: '8px 0', textDecoration: 'none' }}>
@@ -493,7 +495,7 @@ const Sidebar = ({ collapsed, onToggle, mobileOpen, setMobileOpen }) => {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontWeight: 700, fontSize: 12,
                   boxShadow: '0 0 12px rgba(3,217,133,0.3)', cursor: 'pointer',
-                }}>AJ</div>
+                }}>{user?.name?.substring(0, 2).toUpperCase() || 'U'}</div>
               </NavLink>
             </HoverPopup>
           ) : (
@@ -506,13 +508,13 @@ const Sidebar = ({ collapsed, onToggle, mobileOpen, setMobileOpen }) => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontWeight: 700, fontSize: 12, flexShrink: 0,
                     boxShadow: '0 0 12px rgba(3,217,133,0.3)',
-                  }}>AJ</div>
+                  }}>{user?.name?.substring(0, 2).toUpperCase() || 'U'}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Ankit Jatav</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'User'}</span>
                       <ChevronUp style={{ width: 14, height: 14, color: '#03D985', flexShrink: 0 }} />
                     </div>
-                    <span style={{ fontSize: 11, color: '#606060' }}>ID# 131364877</span>
+                    <span style={{ fontSize: 11, color: '#606060' }}>{user?.role || 'Member'}</span>
                   </div>
                 </div>
               </NavLink>

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { User, Mail, Phone, MapPin, Globe, Edit3, Shield, Key, Clock, CheckCircle, Calendar } from 'lucide-react';
+import React, { useState , useEffect } from 'react';
+import { User, Mail, Phone, MapPin, Globe, Edit3, Shield, Key, Clock, CheckCircle, Calendar, Building } from 'lucide-react';
 import Card from '../components/UI/Card';
 import Button from '../components/UI/Button';
 import Modal from '../components/UI/Modal';
@@ -14,53 +14,116 @@ import Tooltip from '../components/UI/Tooltip';
 import { useToast } from '../components/UI/Toast';
 import { theme } from '../theme/constants';
 
-const PROFILE_DATA = {
-  name: 'Ankit Jatav',
-  email: 'ankit.jatav@cinfy.io',
-  phone: '+91 98765 43210',
-  location: 'New Delhi, India',
-  website: 'https://ankitjatav.dev',
-  bio: 'Full-stack developer and ad-tech enthusiast. Building scalable monetization solutions.',
-  company: 'Cinfy Technologies',
-  role: 'Publisher',
-  pubId: 'PUB-131364877',
-  joined: 'Jan 15, 2024',
-  timezone: 'Asia/Kolkata (UTC+5:30)',
-  language: 'English',
-};
+import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 const ACTIVITY_LOG = [
-  { time: '2 hours ago', action: 'Updated payment settings', type: 'Settings' },
-  { time: '5 hours ago', action: 'Generated weekly report', type: 'Reports' },
-  { time: '1 day ago', action: 'Added new app: FitTracker', type: 'Apps' },
-  { time: '2 days ago', action: 'Payout of $2,450 processed', type: 'Payments' },
-  { time: '3 days ago', action: 'Updated app-ads.txt entries', type: 'Ads' },
-  { time: '5 days ago', action: 'Referred Priya Patel', type: 'Referral' },
+  { action: 'Logged in from Chrome on Windows', type: 'Login', time: '2 hours ago' },
+  { action: 'Changed password', type: 'Security', time: '1 day ago' },
+  { action: 'Updated profile information', type: 'Profile', time: '3 days ago' },
+  { action: 'Logged out', type: 'Logout', time: '5 days ago' },
 ];
 
 const Profile = () => {
+  const { user, setUser } = useAuth();
   const [editModal, setEditModal] = useState(false);
   const [changePassModal, setChangePassModal] = useState(false);
   const [avatarModal, setAvatarModal] = useState(false);
-  const [formData, setFormData] = useState(PROFILE_DATA);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [formData, setFormData] = useState({});
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: '',
+  });
   const toast = useToast();
 
+  const roleBadgeVariant = (r) => {
+    if (!r) return 'default';
+    const key = r.toString().toLowerCase();
+    if (key === 'super_admin' || key === 'admin') return 'info';
+    if (key === 'lead_manager' || key === 'sales_head') return 'success';
+    if (key === 'support_staff') return 'warning';
+    return 'default';
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email_id: user.email || '',
+        phone: user.phone || '',
+        location: user.location || '',
+        website: user.website || '',
+        bio: user.bio || '',
+        company: user.company || '',
+        role: user.role || '',
+        createdAt: user.createdAt || '',
+      });
+    }
+  }, [user]);
+  
+  console.log('User profile data:', formData);
+
   const handleChange = (key, value) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
+    setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSaveProfile = () => {
-    setEditModal(false);
-    toast.success('Profile Updated', 'Your profile has been saved successfully.');
+  const handlePasswordChange = (key, value) => {
+    setPasswordData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleChangePass = () => {
-    setChangePassModal(false);
-    toast.success('Password Changed', 'Your password has been updated.');
+  const handleSaveProfile = async () => {
+    try {
+      const res = await api.put('/admin/me', formData);
+      if (res.status === 200) {
+        setUser(prev => ({...prev, ...res.data.data}));
+        toast.success('Profile Updated', 'Your profile has been saved successfully.');
+        setEditModal(false);
+      }
+    } catch (error) {
+      toast.error('Update Failed', error.response?.data?.message || 'An error occurred.');
+    }
   };
+
+  const handleChangePass = async () => {
+    if (passwordData.newPassword !== passwordData.confirmNewPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+    try {
+      const res = await api.put('/admin/change-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+      if (res.status === 200) {
+        toast.success('Password Changed', 'Your password has been updated.');
+        setChangePassModal(false);
+      }
+    } catch (error) {
+      toast.error('Update Failed', error.response?.data?.message || 'An error occurred.');
+    }
+  };
+
+  if (!user) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', fontSize: 16, color: theme.textMuted }}>
+        Loading your profile...
+      </div>
+    );
+  }
+
 
   const ProfileTab = () => (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
       <Card>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <span style={{ fontSize: 16, fontWeight: 600, color: theme.textPrimary }}>Personal Info</span>
@@ -71,7 +134,7 @@ const Profile = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {[
             { icon: User, label: 'Full Name', value: formData.name },
-            { icon: Mail, label: 'Email', value: formData.email },
+            { icon: Mail, label: 'Email', value: formData.email_id },
             { icon: Phone, label: 'Phone', value: formData.phone },
             { icon: MapPin, label: 'Location', value: formData.location },
             { icon: Globe, label: 'Website', value: formData.website },
@@ -94,10 +157,8 @@ const Profile = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {[
             { icon: Shield, label: 'Role', value: formData.role, badge: true },
-            { icon: Key, label: 'Publisher ID', value: formData.pubId },
-            { icon: Calendar, label: 'Member Since', value: formData.joined },
-            { icon: Clock, label: 'Timezone', value: formData.timezone },
-            { icon: Globe, label: 'Language', value: formData.language },
+            { icon: Building, label: 'Company', value: formData.company },
+            { icon: Calendar, label: 'Member Since', value: formData.createdAt ? new Date(formData.createdAt).toLocaleDateString() : 'N/A' },
           ].map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 34, height: 34, borderRadius: 8, background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -107,7 +168,7 @@ const Profile = () => {
                 <div style={{ fontSize: 12, color: theme.textMuted }}>{item.label}</div>
                 <div style={{ fontSize: 14, fontWeight: 500, color: theme.textPrimary }}>{item.value}</div>
               </div>
-              {item.badge && <Badge variant="success">{formData.role}</Badge>}
+              {item.badge && <Badge variant={roleBadgeVariant(formData.role)}>{(formData.role || '').toString().split('_').map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(' ')}</Badge>}
             </div>
           ))}
         </div>
@@ -152,21 +213,21 @@ const Profile = () => {
       <Breadcrumb items={[{ label: 'Dashboard', path: '/' }, { label: 'Profile' }]} />
 
       {/* Profile Header */}
-      <Card style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 24 }}>
+      <Card style={{ marginBottom: 24, display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'center' : 'flex-start', gap: 24 }}>
         <Tooltip text="Click to change avatar" position="bottom">
-          <div onClick={() => setAvatarModal(true)} style={{ cursor: 'pointer', position: 'relative' }}>
+          <div onClick={() => setAvatarModal(true)} style={{ cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
             <Avatar name={formData.name} size="xl" color={theme.primary} />
           </div>
         </Tooltip>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ flex: 1, textAlign: isMobile ? 'center' : 'left' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: isMobile ? 'center' : 'flex-start' }}>
             <h1 style={{ fontSize: 24, fontWeight: 700, color: theme.textPrimary, margin: 0 }}>{formData.name}</h1>
             <CheckCircle style={{ width: 18, height: 18, color: theme.primary }} />
           </div>
           <p style={{ fontSize: 14, color: theme.textMuted, marginTop: 4 }}>{formData.company} · {formData.role}</p>
-          <p style={{ fontSize: 13, color: theme.textLight, marginTop: 2 }}>{formData.email}</p>
+          <p style={{ fontSize: 13, color: theme.textLight, marginTop: 2 }}>{formData.email_id}</p>
         </div>
-        <Button variant="primary" onClick={() => setEditModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Button variant="primary" onClick={() => setEditModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: isMobile ? '100%' : 'auto', justifyContent: 'center' }}>
           <Edit3 style={{ width: 14, height: 14 }} /> Edit Profile
         </Button>
       </Card>
@@ -180,11 +241,11 @@ const Profile = () => {
       <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="Edit Profile" size="lg"
         footer={<><Button variant="ghost" onClick={() => setEditModal(false)}>Cancel</Button><Button variant="primary" onClick={handleSaveProfile}>Save Changes</Button></>}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
             <div><label style={{ fontSize: 13, fontWeight: 600, color: theme.textSecondary, marginBottom: 6, display: 'block' }}>Full Name</label>
               <Input value={formData.name} onChange={(e) => handleChange('name', e.target.value)} style={{ width: '100%' }} /></div>
-            <div><label style={{ fontSize: 13, fontWeight: 600, color: theme.textSecondary, marginBottom: 6, display: 'block' }}>Email</label>
-              <Input value={formData.email} onChange={(e) => handleChange('email', e.target.value)} style={{ width: '100%' }} /></div>
+            <div><label style={{ fontSize: 13, fontWeight: 600, color: theme.textSecondary, marginBottom: 6, display: 'block' }}>Email (Read-only)</label>
+              <Input value={formData.email_id} disabled style={{ width: '100%' }} /></div>
             <div><label style={{ fontSize: 13, fontWeight: 600, color: theme.textSecondary, marginBottom: 6, display: 'block' }}>Phone</label>
               <Input value={formData.phone} onChange={(e) => handleChange('phone', e.target.value)} style={{ width: '100%' }} /></div>
             <div><label style={{ fontSize: 13, fontWeight: 600, color: theme.textSecondary, marginBottom: 6, display: 'block' }}>Location</label>
@@ -210,11 +271,11 @@ const Profile = () => {
         footer={<><Button variant="ghost" onClick={() => setChangePassModal(false)}>Cancel</Button><Button variant="primary" onClick={handleChangePass}>Update Password</Button></>}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div><label style={{ fontSize: 13, fontWeight: 600, color: theme.textSecondary, marginBottom: 6, display: 'block' }}>Current Password</label>
-            <Input type="password" placeholder="Enter current password" style={{ width: '100%' }} /></div>
+            <Input type="password" placeholder="Enter current password" style={{ width: '100%' }} value={passwordData.currentPassword} onChange={(e) => handlePasswordChange('currentPassword', e.target.value)} /></div>
           <div><label style={{ fontSize: 13, fontWeight: 600, color: theme.textSecondary, marginBottom: 6, display: 'block' }}>New Password</label>
-            <Input type="password" placeholder="Enter new password" style={{ width: '100%' }} /></div>
+            <Input type="password" placeholder="Enter new password" style={{ width: '100%' }} value={passwordData.newPassword} onChange={(e) => handlePasswordChange('newPassword', e.target.value)} /></div>
           <div><label style={{ fontSize: 13, fontWeight: 600, color: theme.textSecondary, marginBottom: 6, display: 'block' }}>Confirm New Password</label>
-            <Input type="password" placeholder="Confirm new password" style={{ width: '100%' }} /></div>
+            <Input type="password" placeholder="Confirm new password" style={{ width: '100%' }} value={passwordData.confirmNewPassword} onChange={(e) => handlePasswordChange('confirmNewPassword', e.target.value)} /></div>
         </div>
       </Modal>
     </div>

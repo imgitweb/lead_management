@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, CheckCircle, AlertTriangle, Info, Clock, CheckCircle2, Search, Filter, Trash2, MailOpen } from 'lucide-react';
 import Card from '../components/UI/Card';
 import Button from '../components/UI/Button';
@@ -23,7 +23,16 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState(DEMO_NOTIFICATIONS);
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const toast = useToast();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleMarkAllRead = () => {
     setNotifications(notifications.map(n => ({ ...n, unread: false })));
@@ -58,24 +67,37 @@ const Notifications = () => {
     <div>
       <Breadcrumb items={[{ label: 'Dashboard', path: '/' }, { label: 'Notifications' }]} />
       
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 16 : 0 }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: theme.textPrimary, marginBottom: 4 }}>Notifications</h1>
           <p style={{ fontSize: 14, color: theme.textMuted }}>Stay updated with alerts and system messages.</p>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <Button variant="outline" onClick={handleMarkAllRead} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <CheckCircle2 style={{ width: 16, height: 16 }} /> Mark all as read
+        <div style={{ display: 'flex', gap: 12, flexDirection: isMobile ? 'column' : 'row', width: isMobile ? '100%' : 'auto' }}>
+          <Button variant="outline" onClick={handleMarkAllRead} style={{ display: 'flex', alignItems: 'center', gap: 8, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+            <CheckCircle2 style={{ width: 16, height: 16 }} /> {isMobile ? 'Mark read' : 'Mark all as read'}
           </Button>
-          <Button variant="ghost" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Trash2 style={{ width: 16, height: 16 }} /> Clear all
+          <Button variant="ghost" style={{ display: 'flex', alignItems: 'center', gap: 8, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+            <Trash2 style={{ width: 16, height: 16 }} /> {isMobile ? 'Clear' : 'Clear all'}
           </Button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: 24 }}>
+      {/* Mobile Search Bar */}
+      {isMobile && (
+        <div style={{ position: 'relative', marginBottom: 16 }}>
+          <Search style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: theme.inputPlaceholder }} />
+          <Input 
+            placeholder="Search notifications..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ paddingLeft: 40, width: '100%', background: theme.cardBg }} 
+          />
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 3fr', gap: 24 }}>
         {/* Sidebar Filters */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: isMobile ? 'none' : 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ position: 'relative' }}>
             <Search style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: theme.inputPlaceholder }} />
             <Input 
@@ -128,7 +150,7 @@ const Notifications = () => {
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {filtered.map((n, i) => (
                 <div key={n.id} style={{ 
-                  display: 'flex', gap: 16, padding: '20px 24px',
+                  display: 'flex', gap: isMobile ? 12 : 16, padding: isMobile ? '16px 16px' : '20px 24px',
                   background: n.unread ? 'rgba(3,217,133,0.02)' : 'transparent',
                   borderBottom: i < filtered.length - 1 ? `1px solid ${theme.cardBorder}` : 'none',
                   transition: 'background 0.2s',
@@ -139,7 +161,7 @@ const Notifications = () => {
                 onMouseLeave={(e) => { e.currentTarget.style.background = n.unread ? 'rgba(3,217,133,0.02)' : 'transparent'; }}
                 >
                   <div style={{ 
-                    width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
+                    width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: '50%', flexShrink: 0,
                     background: theme.cardBg, border: `1px solid ${theme.cardBorder}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}>
@@ -147,12 +169,12 @@ const Notifications = () => {
                   </div>
                   
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', marginBottom: 4, flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 4 : 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <h3 style={{ fontSize: 15, fontWeight: n.unread ? 700 : 600, color: theme.textPrimary, margin: 0 }}>{n.title}</h3>
                         {n.unread && <span style={{ width: 8, height: 8, borderRadius: '50%', background: theme.primary }} />}
                       </div>
-                      <span style={{ fontSize: 12, color: theme.textMuted, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 12, color: theme.textMuted, display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                         <Clock style={{ width: 12, height: 12 }} /> {n.time}
                       </span>
                     </div>

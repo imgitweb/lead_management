@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ToastProvider } from './components/UI/Toast';
+import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/Layout/DashboardLayout';
 import Analytics from './pages/Analytics';
 import CustomReports from './pages/CustomReports';
@@ -46,8 +47,15 @@ function App() {
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<DashboardLayout />}>
+            <Route path="/login" element={<Login />} />
+            <Route 
+              path="/" 
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
             <Route index element={<Analytics />} />
              <Route path="leads" element={<LeadsPage />} />
              <Route path="leads/:id" element={<LeadDetailsPage />} />
@@ -75,7 +83,7 @@ function App() {
             <Route path="resources" element={<ResourceCenter />} />
             <Route path="app-ads" element={<AppAdsTxt />} />
             {/* <Route path="referral" element={<ReferralProgram />} /> */}
-            <Route path="referral" element={<FeaturePage title="Referral Program" breadcrumb={[{ label: 'Referral Program', path: '/referral' }]} />} />
+            <Route path="referral" element={<ReferralProgram />} />
 
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<GeneralSettings />} />
@@ -84,7 +92,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </ToastProvider>
-  </AuthProvider>
+    </AuthProvider>
   );
 }
 

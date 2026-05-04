@@ -5,7 +5,7 @@ import axios from 'axios';
  * Handles base URL, headers, and error interceptors.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -26,15 +26,11 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle global errors (like 401 Unauthorized)
+// Response Interceptor: Handle errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Auto logout or redirect to login if token expires
-      localStorage.removeItem('auth_token');
-      window.location.href = '/login';
-    }
+    // Don't auto-redirect here, let AuthContext handle it
     return Promise.reject(error);
   }
 );
