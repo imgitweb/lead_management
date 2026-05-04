@@ -90,17 +90,21 @@ const InquiryDetailsPage = () => {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 20
+        marginBottom: 20,
+        flexWrap: "wrap",
+        gap: 12
       }}>
         <h1 style={{
           fontSize: theme.fontSizeH1,
           fontWeight: theme.fontWeightBold,
-          color: theme.textPrimary
+          color: theme.textPrimary,
+          margin: 0,
+          flex: "1 1 auto"
         }}>
           Inquiry Details
         </h1>
 
-        <Button variant="primary" onClick={() => navigate("/inquiries")}>
+        <Button variant="primary" onClick={() => navigate("/inquiries")} style={{ whiteSpace: "nowrap" }}>
           <ArrowLeft size={16} /> Back
         </Button>
       </div>
@@ -108,19 +112,26 @@ const InquiryDetailsPage = () => {
       {/* GRID */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "2fr 1fr",
+        gridTemplateColumns: "1fr",
         gap: 20
-      }} className="grid-cols-1 md:grid-cols-[2fr_1fr]">
+      }}
+      className="grid-responsive"
+      onLoad={() => {
+        if (window.innerWidth >= 768) {
+          document.querySelector('.grid-responsive').style.gridTemplateColumns = "2fr 1fr";
+        }
+      }}>
 
         {/* LEFT */}
         <Card>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "1fr",
             gap: 16,
             color: theme.textPrimary,
             marginBottom: 16
-          }}>
+          }}
+          className="details-grid">
             <Detail label="University/Organization" value={inquiry.university_name} />
             <Detail label="Email" value={inquiry.university_email} />
             <Detail label="Contact Person" value={inquiry.contact_person_name} />
@@ -344,6 +355,34 @@ const InquiryDetailsPage = () => {
           }
         `}</style>
       </Modal>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .grid-responsive {
+            grid-template-columns: 1fr !important;
+          }
+          
+          .details-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @media (min-width: 769px) {
+          .grid-responsive {
+            grid-template-columns: 2fr 1fr !important;
+          }
+          
+          .details-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          h1 {
+            font-size: 24px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

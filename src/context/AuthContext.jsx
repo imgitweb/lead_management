@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '../services/api';
 
 const AuthContext = createContext();
 
@@ -8,8 +9,6 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Demo user data
   const DEMO_USER = {
     id: 'user-123',
     name: 'Ankit Jatav',
@@ -19,30 +18,79 @@ export const AuthProvider = ({ children }) => {
     company: 'Cinfy Dashboard Inc.'
   };
 
-  useEffect(() => {
-    // Check for existing session on mount
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      // In a real app, you would fetch user data from an API here
-      setUser(DEMO_USER);
+  const fetchUserProfile = async () => {
+    try {
+      const response = await api.get('/admin/me');
+      if (response.status === 200) {
+        const userData = response.data.data;
+        setUser({
+          id: userData._id,
+          name: userData.name,
+          email: userData.email_id,
+          role: userData.role,
+          phone: userData.phone,
+          location: userData.location,
+          website: userData.website,
+          company: userData.company,
+          bio: userData.bio,
+          avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${userData.name}`,
+          createdAt: userData.createdAt,
+        });
+        return true;
+      }
+    } catch (error) {
+      console.error("Failed to fetch user profile", error);
+      // If it's a 401, the token is invalid
+      if (error.response?.status === 401) {
+        localStorage.removeItem('auth_token');
+        setUser(null);
+        return false;
+      }
+      // For other errors, clear user but don't redirect
+      setUser(null);
+      return false;
     }
-    setLoading(false);
+  };
+
+  useEffect(() => {
+    // Restore session from localStorage on mount
+    const restoreSession = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        const success = await fetchUserProfile();
+        if (!success) {
+          localStorage.removeItem('auth_token');
+        }
+      }
+      setLoading(false);
+    };
+    
+    restoreSession();
   }, []);
 
   const login = async (email, password) => {
     setLoading(true);
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Demo authentication logic
-    if (email === 'incubation.lead@gmail.com' && password === 'incubation@123') {
-      localStorage.setItem('auth_token', 'randam-demo-token-24124441424124214223');
-      setUser(DEMO_USER);
+    try {
+      const response = await api.post('/admin/login', {
+        email_id: email,
+        password,
+      });
+
+      const data = response.data;
+
+      if (response.status === 200 && data.token) {
+        localStorage.setItem('auth_token', data.token);
+        await fetchUserProfile(); // Fetch full user profile
+        setLoading(false);
+        return { success: true };
+      } else {
+        setLoading(false);
+        return { success: false, message: data.message || 'Invalid email or password' };
+      }
+    } catch (error) {
       setLoading(false);
-      return { success: true };
-    } else {
-      setLoading(false);
-      return { success: false, message: 'Invalid email or password' };
+      const errorMessage = error.response?.data?.message || error.message || 'An error occurred. Please try again.';
+      return { success: false, message: errorMessage };
     }
   };
 
@@ -53,15 +101,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-/**
- * Custom hook to easily access AuthContext
- */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

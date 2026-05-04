@@ -14,7 +14,6 @@ import Breadcrumb from '../../components/UI/Breadcrumb';
 import { useToast } from '../../components/UI/Toast';
 import { theme } from '../../theme/constants';
 import api from '../../services/api';
-import { useNavigate } from 'react-router-dom';
 
 const PER_PAGE = 6;
 
@@ -76,7 +75,6 @@ const getTicketStatusVariant = (status) => {
 };
 
 const SupportTicketPage = () => {
-  const navigate = useNavigate();
   const toast = useToast();
 
   const [tickets, setTickets] = useState([]);
@@ -87,6 +85,7 @@ const SupportTicketPage = () => {
   const [page, setPage] = useState(1);
   const [addModal, setAddModal] = useState(false);
   const [editModal, setEditModal] = useState(false);
+  const [viewModal, setViewModal] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [formData, setFormData] = useState(TICKET_FORM_DEFAULTS);
@@ -168,6 +167,11 @@ const SupportTicketPage = () => {
     setEditModal(true);
   };
 
+  const openView = (ticket) => {
+    setSelectedTicket(ticket);
+    setViewModal(true);
+  };
+
   const categoryOptionsForFilter = Array.from(new Set(tickets.map((ticket) => ticket.category).filter(Boolean))).sort();
 
   const filteredTickets = tickets.filter((ticket) => {
@@ -194,7 +198,9 @@ const SupportTicketPage = () => {
       header: 'Ticket',
       accessor: 'subject',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div
+          onClick={() => openView(row)}
+          style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
           <Avatar name={row.subject} size="sm" />
           <div>
             <div style={{ fontWeight: 600, color: theme.textPrimary }}>
@@ -241,7 +247,7 @@ const SupportTicketPage = () => {
       render: (row) => (
         <DropdownMenu
           items={[
-            { icon: Eye, label: 'View', onClick: () => openEdit(row) },
+            { icon: Eye, label: 'View', onClick: () => openView(row) },
             { icon: Edit3, label: 'Edit', onClick: () => openEdit(row) },
             { divider: true },
             {
@@ -376,6 +382,67 @@ const SupportTicketPage = () => {
         <TicketForm values={formData} setFormData={setFormData} />
       </Modal>
 
+      <Modal
+        isOpen={viewModal}
+        onClose={() => setViewModal(false)}
+        title="Ticket Quick Info"
+        size="md"
+        footer={(
+          <Button variant="ghost" onClick={() => setViewModal(false)}>Close</Button>
+        )}
+      >
+        {selectedTicket && (
+          <div className="ticket-quick-sheet" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <QuickInfoHeader value={selectedTicket.subject} />
+
+            <QuickInfoRow label="Category" value={selectedTicket.category} />
+            <QuickInfoRow
+              label="Priority"
+              value={(
+                <Badge variant={selectedTicket.priority === 'High' ? 'error' : selectedTicket.priority === 'Medium' ? 'warning' : 'success'}>
+                  {selectedTicket.priority}
+                </Badge>
+              )}
+            />
+            <QuickInfoRow
+              label="Status"
+              value={(
+                <Badge variant={getTicketStatusVariant(selectedTicket.status)}>
+                  {selectedTicket.status}
+                </Badge>
+              )}
+            />
+
+            <QuickInfoDivider />
+
+            <QuickInfoRow label="Assigned To" value={selectedTicket.assignedTo || '-'} />
+            <QuickInfoRow label="Created By" value={selectedTicket.createdBy || '-'} />
+            <QuickInfoRow label="Created" value={selectedTicket.createdAt ? new Date(selectedTicket.createdAt).toLocaleString() : '-'} />
+            <QuickInfoRow label="Updated" value={selectedTicket.updatedAt ? new Date(selectedTicket.updatedAt).toLocaleString() : '-'} />
+
+            <QuickInfoDivider />
+
+            <div style={{ paddingTop: 2 }}>
+              <div style={{ fontSize: 12, color: theme.textLight, marginBottom: 6 }}>Description</div>
+              <div style={{ color: theme.textPrimary, lineHeight: 1.55, wordBreak: 'break-word' }}>
+                {selectedTicket.description || '-'}
+              </div>
+            </div>
+          </div>
+        )}
+        <style>{`
+          .ticket-quick-sheet {
+            padding: 2px 0 4px;
+          }
+
+          @media (max-width: 768px) {
+            .ticket-quick-sheet {
+              padding: 0;
+            }
+          }
+        `}</style>
+      </Modal>
+
       <ConfirmDialog
         isOpen={deleteDialog}
         onClose={() => setDeleteDialog(false)}
@@ -423,5 +490,27 @@ const TicketForm = ({ values, setFormData }) => {
     </div>
   );
 };
+
+const QuickInfoHeader = ({ value }) => (
+  <div style={{ paddingBottom: 14, marginBottom: 10, borderBottom: `1px solid ${theme.cardBorder}` }}>
+    <div style={{ fontSize: 12, color: theme.textLight, marginBottom: 6 }}>Subject</div>
+    <div style={{ color: theme.textPrimary, fontWeight: 700, fontSize: 18, lineHeight: 1.35, wordBreak: 'break-word' }}>
+      {value || '-'}
+    </div>
+  </div>
+);
+
+const QuickInfoRow = ({ label, value }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, padding: '12px 0' }}>
+    <span style={{ fontSize: 14, color: theme.textPrimary, flex: '0 0 auto' }}>{label}</span>
+    <span style={{ fontSize: 14, color: theme.textPrimary, fontWeight: 500, textAlign: 'right', wordBreak: 'break-word' }}>
+      {value || '-'}
+    </span>
+  </div>
+);
+
+const QuickInfoDivider = () => (
+  <div style={{ height: 1, background: theme.cardBorder, margin: '2px 0' }} />
+);
 
 export default SupportTicketPage;

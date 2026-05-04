@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Gift, Users, DollarSign, Copy, CheckCircle, Share2, Trophy, Star } from 'lucide-react';
 import Card from '../components/UI/Card';
 import Button from '../components/UI/Button';
@@ -19,10 +19,19 @@ const DEMO_REFERRALS = [
 
 const ReferralProgram = () => {
   const [copied, setCopied] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const referralCode = 'CINFY-AJ2026';
   const referralLink = `https://cinfy.io/ref/${referralCode}`;
 
   const toast = useToast();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
@@ -38,8 +47,8 @@ const ReferralProgram = () => {
         <span style={{ fontWeight: 600, color: theme.textPrimary }}>{row.name}</span>
       </div>
     ) },
-    { header: 'Email', accessor: 'email' },
-    { header: 'Date Joined', accessor: 'date' },
+    ...(isMobile ? [] : [{ header: 'Email', accessor: 'email' }]),
+    ...(isMobile ? [] : [{ header: 'Date Joined', accessor: 'date' }]),
     {
       header: 'Status',
       accessor: 'status',
@@ -68,14 +77,14 @@ const ReferralProgram = () => {
       </div>
 
       {/* Referral Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(250px, 1fr))', gap: 14, marginBottom: 24 }}>
         {[
           { label: 'Total Referrals', value: '5', icon: Users, color: '#3b82f6' },
           { label: 'Active Users', value: '4', icon: CheckCircle, color: '#16a34a' },
           { label: 'Total Earned', value: '$264.50', icon: DollarSign, color: theme.primary },
           { label: 'Your Rank', value: '#12', icon: Trophy, color: '#f97316' },
         ].map((s) => (
-          <Card key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px' }}>
+          <Card key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: isMobile ? '12px 14px' : '16px 18px' }}>
             <div style={{
               width: 40, height: 40, borderRadius: 10,
               background: `${s.color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -83,7 +92,7 @@ const ReferralProgram = () => {
               <s.icon style={{ width: 18, height: 18, color: s.color }} />
             </div>
             <div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: theme.textPrimary }}>{s.value}</div>
+              <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: theme.textPrimary }}>{s.value}</div>
               <div style={{ fontSize: 12, color: theme.textMuted }}>{s.label}</div>
             </div>
           </Card>
@@ -98,19 +107,19 @@ const ReferralProgram = () => {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <Gift style={{ width: 20, height: 20, color: theme.primary }} />
-          <span style={{ fontSize: 18, fontWeight: 700, color: theme.textPrimary }}>Share & Earn</span>
+          <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: theme.textPrimary }}>Share & Earn</span>
         </div>
         <p style={{ fontSize: 14, color: theme.textMuted, marginBottom: 16, lineHeight: 1.6 }}>
           Earn <strong style={{ color: theme.primary }}>10% commission</strong> on every referral's earnings for the first 12 months.
           Share your unique link below.
         </p>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 10, alignItems: isMobile ? 'stretch' : 'center' }}>
           <div style={{
             flex: 1, padding: '12px 16px', background: '#fafafa',
             border: `1px solid ${theme.cardBorder}`, borderRadius: 8,
             fontSize: 14, color: theme.textSecondary, fontFamily: 'monospace',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap',
           }}>
             {referralLink}
           </div>
@@ -118,7 +127,7 @@ const ReferralProgram = () => {
             {copied ? <CheckCircle style={{ width: 16, height: 16 }} /> : <Copy style={{ width: 16, height: 16 }} />}
             {copied ? 'Copied!' : 'Copy Link'}
           </Button>
-          <Button variant="outline" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Button variant="outline" style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
             <Share2 style={{ width: 16, height: 16 }} /> Share
           </Button>
         </div>
@@ -136,7 +145,7 @@ const ReferralProgram = () => {
           <Star style={{ width: 16, height: 16, color: '#f59e0b' }} />
           <span style={{ fontSize: 15, fontWeight: 600, color: theme.textPrimary }}>Reward Tiers</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
           {[
             { tier: 'Bronze', refs: '1-5 referrals', reward: '10% commission', color: '#b45309', active: true },
             { tier: 'Silver', refs: '6-15 referrals', reward: '15% commission', color: '#6b7280', active: false },

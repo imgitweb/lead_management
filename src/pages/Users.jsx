@@ -1,26 +1,19 @@
-import React, { useState } from 'react';
-import { Plus, Search, Filter, Edit3, Trash2, Mail, Shield, ShieldAlert, Key } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Filter, Shield, ShieldAlert } from 'lucide-react';
 import Card from '../components/UI/Card';
 import Button from '../components/UI/Button';
-import Modal from '../components/UI/Modal';
 import Table from '../components/UI/Table';
 import Badge from '../components/UI/Badge';
 import Avatar from '../components/UI/Avatar';
-import DropdownMenu from '../components/UI/DropdownMenu';
-import ConfirmDialog from '../components/UI/ConfirmDialog';
 import Pagination from '../components/UI/Pagination';
 import Breadcrumb from '../components/UI/Breadcrumb';
 import { Input, Select } from '../components/UI/FormElements';
 import { useToast } from '../components/UI/Toast';
 import { theme } from '../theme/constants';
+import api from '../services/api';
 
-const DEMO_USERS = [
-  { id: 'USR-001', name: 'Alex Johnson', email: 'alex.j@example.com', role: 'Admin', status: 'Active', lastLogin: '2 mins ago' },
-  { id: 'USR-002', name: 'Sarah Williams', email: 'sarah.w@example.com', role: 'Editor', status: 'Active', lastLogin: '1 hour ago' },
-  { id: 'USR-003', name: 'Michael Brown', email: 'mike.b@example.com', role: 'Viewer', status: 'Invited', lastLogin: 'Never' },
-  { id: 'USR-004', name: 'Emily Davis', email: 'emily.d@example.com', role: 'Editor', status: 'Active', lastLogin: 'Yesterday' },
-  { id: 'USR-005', name: 'James Wilson', email: 'james.w@example.com', role: 'Viewer', status: 'Inactive', lastLogin: '2 weeks ago' },
-];
+// start with empty list; will fetch from backend
+const DEMO_USERS = [];
 
 const PER_PAGE = 5;
 
@@ -30,44 +23,42 @@ const Users = () => {
   const [roleFilter, setRoleFilter] = useState('all');
   const [page, setPage] = useState(1);
   
-  const [addModal, setAddModal] = useState(false);
-  const [deleteDialog, setDeleteDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  
-  const [formData, setFormData] = useState({ name: '', email: '', role: 'Viewer' });
   const toast = useToast();
 
+  useEffect(() => {
+    let mounted = true;
+    const fetchUsers = async () => {
+      try {
+        const resp = await api.get('/admin/users');
+        if (mounted && resp?.data?.data) {
+          // format createdAt to YYYY-MM-DD
+          const items = resp.data.data.map(u => ({
+            ...u,
+            createdAt: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : ''
+          }));
+          setUsers(items);
+        }
+      } catch (err) {
+        console.error('Failed to fetch users', err);
+        toast.error('Could not load users');
+      }
+    };
+    fetchUsers();
+    return () => { mounted = false; };
+  }, []);
+
   const filteredUsers = users.filter(u => {
-    const matchesSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter === 'all' || u.role.toLowerCase() === roleFilter.toLowerCase();
+    const name = (u && u.name) ? u.name : '';
+    const role = (u && u.role) ? u.role : '';
+    const matchesSearch = name.toLowerCase().includes((searchQuery || '').toLowerCase());
+    const matchesRole = roleFilter === 'all' || role.toLowerCase() === (roleFilter || '').toLowerCase();
     return matchesSearch && matchesRole;
   });
 
   const totalPages = Math.ceil(filteredUsers.length / PER_PAGE);
   const paged = filteredUsers.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  const handleAddUser = () => {
-    if (!formData.name || !formData.email) return;
-    const newUser = {
-      id: `USR-00${users.length + 1}`,
-      name: formData.name,
-      email: formData.email,
-      role: formData.role,
-      status: 'Invited',
-      lastLogin: 'Never',
-    };
-    setUsers([...users, newUser]);
-    setAddModal(false);
-    setFormData({ name: '', email: '', role: 'Viewer' });
-    toast.success('Invite Sent', `An invitation email has been sent to ${newUser.email}.`);
-  };
-
-  const handleDelete = () => {
-    if (!selectedUser) return;
-    setUsers(users.filter(u => u.id !== selectedUser.id));
-    toast.error('User Removed', `${selectedUser.name} has been removed from the team.`);
-    setSelectedUser(null);
-  };
+  // Read-only users list; actions (invite/edit/delete) are disabled to avoid accidental changes.
 
   const roleStyles = {
     Admin: { bg: 'rgba(239,68,68,0.1)', color: '#ef4444' },
@@ -86,7 +77,6 @@ const Users = () => {
           <Avatar name={row.name} size="md" />
           <div>
             <div style={{ fontWeight: 600, color: theme.textPrimary }}>{row.name}</div>
-            <div style={{ fontSize: 13, color: theme.textMuted }}>{row.email}</div>
           </div>
         </div>
       )
@@ -95,15 +85,25 @@ const Users = () => {
       header: 'Role',
       accessor: 'role',
       render: (row) => {
-        const style = roleStyles[row.role];
+        const role = (row.role || '').toString();
+        const roleKey = role.toLowerCase();
+        const roleVariant = (r) => {
+          switch (r) {
+            case 'super_admin': return 'error';
+            case 'admin': return 'info';
+            case 'lead_manager': return 'success';
+            case 'support_staff': return 'warning';
+            case 'sales_head': return 'info';
+            default: return 'default';
+          }
+        };
+        const prettyRole = (r) => r.split('_').map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(' ');
+
         return (
-          <span style={{
-            padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600,
-            background: style?.bg, color: style?.color, display: 'inline-flex', alignItems: 'center', gap: 4
-          }}>
-            {row.role === 'Admin' ? <ShieldAlert style={{ width: 12, height: 12 }} /> : <Shield style={{ width: 12, height: 12 }} />}
-            {row.role}
-          </span>
+          <Badge variant={roleVariant(roleKey)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            {roleKey === 'admin' ? <ShieldAlert style={{ width: 12, height: 12 }} /> : <Shield style={{ width: 12, height: 12 }} />}
+            {prettyRole(roleKey)}
+          </Badge>
         );
       }
     },
@@ -112,21 +112,7 @@ const Users = () => {
       accessor: 'status',
       render: (row) => <Badge variant={statusVariants[row.status]}>{row.status}</Badge>
     },
-    { header: 'Last Login', accessor: 'lastLogin' },
-    {
-      header: '',
-      accessor: 'actions',
-      render: (row) => (
-        <DropdownMenu
-          items={[
-            { icon: Edit3, label: 'Edit Role', onClick: () => toast.info('Edit', 'Edit role clicked') },
-            { icon: Key, label: 'Reset Password', onClick: () => toast.success('Sent', 'Password reset email sent.') },
-            { divider: true },
-            { icon: Trash2, label: 'Remove User', danger: true, onClick: () => { setSelectedUser(row); setDeleteDialog(true); } },
-          ]}
-        />
-      ),
-    },
+    { header: 'Created At', accessor: 'createdAt' },
   ];
 
   return (
@@ -138,7 +124,7 @@ const Users = () => {
           <h1 style={{ fontSize: 26, fontWeight: 700, color: theme.textPrimary, marginBottom: 4 }}>Team Members</h1>
           <p style={{ fontSize: 14, color: theme.textMuted }}>Manage your team's access and roles.</p>
         </div>
-        <Button variant="primary" onClick={() => setAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Button variant="primary" disabled style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Plus style={{ width: 16, height: 16 }} /> Invite Member
         </Button>
       </div>
@@ -179,48 +165,7 @@ const Users = () => {
         />
       </Card>
 
-      {/* Invite Modal */}
-      <Modal isOpen={addModal} onClose={() => setAddModal(false)} title="Invite Team Member" size="sm"
-        footer={<>
-          <Button variant="ghost" onClick={() => setAddModal(false)}>Cancel</Button>
-          <Button variant="primary" onClick={handleAddUser} disabled={!formData.name || !formData.email}>Send Invite</Button>
-        </>}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 600, color: theme.textSecondary, marginBottom: 6, display: 'block' }}>Full Name</label>
-            <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="e.g. John Doe" style={{ width: '100%' }} />
-          </div>
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 600, color: theme.textSecondary, marginBottom: 6, display: 'block' }}>Email Address</label>
-            <Input value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="john@example.com" style={{ width: '100%' }} />
-          </div>
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 600, color: theme.textSecondary, marginBottom: 6, display: 'block' }}>Role</label>
-            <Select 
-              value={formData.role} 
-              onChange={(e) => setFormData({...formData, role: e.target.value})}
-              options={[
-                { label: 'Admin (Full Access)', value: 'Admin' },
-                { label: 'Editor (Can modify content)', value: 'Editor' },
-                { label: 'Viewer (Read only)', value: 'Viewer' },
-              ]}
-              style={{ width: '100%' }} 
-            />
-          </div>
-        </div>
-      </Modal>
-
-      {/* Delete Confirm */}
-      <ConfirmDialog
-        isOpen={deleteDialog}
-        onClose={() => setDeleteDialog(false)}
-        onConfirm={handleDelete}
-        type="delete"
-        title={`Remove ${selectedUser?.name}?`}
-        message="This user will lose access to the platform immediately. Are you sure?"
-        confirmLabel="Remove User"
-      />
+      {/* Read-only view: invite/edit/delete functionality disabled to avoid accidental changes */}
     </div>
   );
 };
