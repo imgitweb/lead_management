@@ -34,6 +34,9 @@ import AddLeadPage from './pages/AddLeadPage';
 import SupportTicketPage from './pages/leads/SupportTicketPage';
 import FeaturePage from './pages/inbox/FeaturePage';
 import WhatsAppPage from './pages/inbox/WhatsAppPage';
+import FacebookChat from './pages/inbox/FacebookChat';
+import WhatsappChat from "./pages/inbox/WhatsappChat";
+import InstagramChat from "./pages/inbox/InstagramChat";
 
 function ScrollToTop() {
   useScrollToTop();
@@ -63,10 +66,9 @@ function App() {
              <Route path="inquiries" element={<InquiriesPage />} />
              <Route path="inquiries/:id" element={<InquiryDetailsPage />} />
             <Route path="support/ticket" element={<SupportTicketPage />} />
-            <Route path="inbox/whatsapp" element={<FeaturePage title="WhatsApp" breadcrumb={[{ label: 'Inbox', path: '/inbox/whatsapp' }]} badge="Omnichannel Hub" description="Centralize WhatsApp inbound messages, mentions, and lead conversations." primaryActionLabel="Go to Inquiries" primaryActionPath="/inquiries" stats={[{ label: 'New DMs', value: '12' }, { label: 'Mention alerts', value: '5' }, { label: 'Assigned today', value: '7' }]} />} />
-            <Route path="inbox/instagram" element={<FeaturePage title="Instagram" breadcrumb={[{ label: 'Inbox', path: '/inbox/instagram' }]} badge="Omnichannel Hub" description="Centralize Instagram inbound messages, mentions, and lead conversations." primaryActionLabel="Go to Inquiries" primaryActionPath="/inquiries" stats={[{ label: 'New DMs', value: '12' }, { label: 'Mention alerts', value: '5' }, { label: 'Assigned today', value: '7' }]} />} />
-            <Route path="inbox/facebook" element={<FeaturePage title="Facebook" breadcrumb={[{ label: 'Inbox', path: '/inbox/facebook' }]} badge="Omnichannel Hub" description="Review Facebook leads and inbox activity without leaving the CRM." primaryActionLabel="View Leads" primaryActionPath="/leads" stats={[{ label: 'Messenger leads', value: '18' }, { label: 'Unassigned', value: '4' }, { label: 'Responded today', value: '9' }]} />} />
-            <Route path="users" element={<Users />} />
+            <Route path="inbox/whatsapp" element={<WhatsappChat />} />
+            <Route path="inbox/instagram" element={<InstagramChat />} />
+            <Route path="inbox/facebook" element={<FacebookChat/>}/>
             <Route path="kanban" element={<KanbanBoard />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="chat" element={<Chat />} />
