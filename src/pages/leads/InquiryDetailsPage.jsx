@@ -10,6 +10,7 @@ import api from "../../services/api";
 import { useParams, useNavigate } from "react-router-dom";
 import { getPriorityVariant, getStatusVariant } from "../../utils";
 import { ArrowLeft } from "lucide-react";
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from "../../components/UI/Toast";
 
 const InquiryDetailsPage = () => {
@@ -25,6 +26,7 @@ const InquiryDetailsPage = () => {
     nextFollowUpDate: "",
     note: ""
   });
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchInquiry = async () => {
@@ -52,7 +54,7 @@ const InquiryDetailsPage = () => {
         date: new Date().toISOString(),
         note: followData.note,
         nextFollowUpDate: followData.nextFollowUpDate,
-        createdBy: localStorage.getItem("user_email") || "system",
+        createdBy: user?.email || user?.name || "system",
       };
 
       const res = await api.post(`/auth/universities/${id}/followups`, newFollow);
@@ -298,7 +300,7 @@ const InquiryDetailsPage = () => {
 
           <InfoBox
             label="Created By"
-            value={localStorage.getItem("user_email") || "N/A"}
+            value={user?.email || user?.name || 'N/A'}
           />
 
           {/* DATE */}
